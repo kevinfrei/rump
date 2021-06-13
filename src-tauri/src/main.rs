@@ -3,6 +3,10 @@
   windows_subsystem = "windows"
 )]
 
+use std::error::Error;
+use std::fmt::Write;
+use std::fs;
+use std::vec::Vec;
 use tauri::{Menu, MenuItem};
 
 // Definition in main.rs
@@ -35,6 +39,28 @@ async fn my_custom_command(
   } else {
     Err("No result".into())
   }
+}
+
+fn uri_handler(data: &str) -> Result<Vec<u8>, Box<dyn Error>> {
+  println!("tune:// uri handler called with {}", data);
+/*
+  let mut bytes = fs::read("/Users/freik/razor.flac").expect("File not found");
+  let mut hdr = String::new();
+  write!(&mut hdr, "HTTP/1.1 200 OK\r\n").unwrap();
+  write!(&mut hdr, "Content-Length: {}\r\n", bytes.len()).unwrap();
+  write!(&mut hdr, "Content-Type: audio/x-flac\r\n").unwrap();
+  write!(&mut hdr, "Connection: Close\r\n").unwrap();
+  write!(&mut hdr, "\r\n").unwrap();
+  println!("Read in {} bytes", bytes.len());
+  print!("{}", hdr);
+  println!("{}, {}, {}", tmp[0], tmp[1], tmp[2]);
+  res.append(&mut hdr.into_bytes());
+  */
+  let mut info = String::new();
+  write!(&mut info, "<html><body><div>Hello</div></body></html>").unwrap();
+  let mut res = Vec::new();
+  res.append(&mut info.into_bytes());
+  Ok(res)
 }
 
 fn main() {
@@ -70,15 +96,7 @@ fn main() {
   tauri::Builder::default()
     .manage(Database {})
     .menu(menu)
-/*    .on_menu_event(|event| match event.menu_item_id().as_str() {
-      "quit" => {
-        std::process::exit(0);
-      }
-      "close" => {
-        event.window().close().unwrap();
-      }
-      _ => {}
-    })*/
+    .register_global_uri_scheme_protocol("tune", &uri_handler)
     .invoke_handler(tauri::generate_handler![my_custom_command])
     .run(tauri::generate_context!())
     .expect("error while running tauri application");
